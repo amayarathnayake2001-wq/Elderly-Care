@@ -1,170 +1,160 @@
-<div align="center">
-
 # Smart Elderly Care
 
-### AI-powered mood, fall, and vital-sign monitoring for safer independent living
-
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![OpenCV](https://img.shields.io/badge/OpenCV-Computer_Vision-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-Deep_Learning-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
-[![Firebase](https://img.shields.io/badge/Firebase-Realtime_Data-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
-
-**Computer vision · Machine learning · IoT sensor monitoring · Real-time alerts**
-
-</div>
-
----
-
-## Overview
-
-Smart Elderly Care is a Python-based AI and IoT prototype designed to support
-elderly people through continuous, non-invasive monitoring. It combines camera
-emotion analysis, machine-learning fall detection, vital-sign anomaly checks,
-Firebase synchronization, and mood-aware music playback in one modular system.
-
-The application can run locally for demonstrations or connect to Firebase
-Realtime Database for integration with Arduino and MPU6050-based hardware.
+An integrated elderly-safety monitoring prototype that connects an AI service,
+a caregiver mobile application, and ESP32-based IoT devices through Firebase
+Realtime Database.
 
 > [!IMPORTANT]
-> This is an academic prototype for monitoring and early warning. It is not a
-> certified medical device and must not be used to diagnose, treat, or replace
-> professional medical care or emergency services.
+> This is an academic prototype for monitoring and early warnings. It is not a
+> certified medical device and must not replace professional medical care or
+> emergency services.
 
-## Core capabilities
+## Project overview
 
-| Module | What it does | Key technology |
+The repository contains three main components:
+
+| Component | Purpose | Main technologies |
 |---|---|---|
-| **Mood intelligence** | Detects facial emotion and accepts a result only after it remains stable | DeepFace, RetinaFace, OpenCV |
-| **Fall detection** | Classifies engineered motion-window features as fall or no-fall | Random Forest, scikit-learn |
-| **MPU6050 support** | Extracts features from recorded CSV data or live serial readings | NumPy, pandas, pyserial |
-| **Vital monitoring** | Evaluates heart rate, SpO2, inactivity, and sensor validity | Rule-based anomaly engine |
-| **Smart alerts** | Produces severity-aware events from combined health and fall signals | Central AI system engine |
-| **Cloud integration** | Reads sensor streams and publishes AI results and history | Firebase Admin SDK |
-| **Mood-aware audio** | Selects local music based on a stable detected emotion | pygame |
+| [Elder Care AI](elderly_care_ai/) | Detects mood and falls, evaluates vital-sign anomalies, creates alerts, and optionally plays mood-based music | Python, OpenCV, DeepFace, scikit-learn, Firebase Admin SDK |
+| [Elder Care Mobile App](Elder%20Care%20Mobile%20App/) | Gives caregivers a live dashboard for health, mood, safety status, reports, and emergency alerts | React Native, Expo, React Navigation, Firebase |
+| [Elder Care IoT](Elder%20Care%20IOT/) | Collects vital signs, motion, SOS, room temperature, humidity, and sound data | ESP32/ESP32-C3, MAX30102, MPU6050, DHT, PIR, INMP441, Arduino |
 
 ## System architecture
 
 ```mermaid
 flowchart LR
-    CAM[Camera] --> MOOD[Emotion Detection]
-    MPU[MPU6050] --> FEATURES[Window Feature Extraction]
-    VITALS[Vital Sensors] --> HEALTH[Health Anomaly Engine]
-    FEATURES --> FALL[Fall Classifier]
-    MOOD --> CORE[AI System Engine]
-    FALL --> CORE
-    HEALTH --> CORE
-    CORE --> ALERTS[Alerts & History]
-    CORE --> MUSIC[Mood-aware Music]
-    CORE <--> DB[(Firebase Realtime Database)]
+    subgraph IoT[IoT devices]
+        V[MAX30102 vitals]
+        M[MPU6050 motion]
+        S[SOS button]
+        R[DHT + PIR + INMP441]
+    end
+    subgraph AI[AI service]
+        C[Camera mood detection]
+        F[Fall classifier]
+        H[Health anomaly engine]
+        A[Alert engine]
+    end
+    DB[(Firebase Realtime Database)]
+    APP[Caregiver mobile app]
+    V --> DB
+    M --> DB
+    S --> DB
+    R --> DB
+    DB <--> F
+    DB <--> H
+    C --> DB
+    F --> A
+    H --> A
+    A --> DB
+    DB <--> APP
 ```
 
-## Model performance
+## Main features
 
-The completed fall-model evaluation reports:
+- Facial-emotion detection with confidence and stability filtering
+- Random Forest fall detection from motion-window features
+- Heart-rate and SpO2 anomaly monitoring
+- ESP32 sensor collection and Firebase synchronization
+- Caregiver dashboard with live health, mood, and environmental readings
+- Critical fall, SOS, and abnormal-health alerts
+- Alert acknowledgement and patient summary reporting
+- Mood-aware local music playback
 
-| Metric | Result |
-|---|---:|
-| Test accuracy | **96.91%** |
-| Fall recall | **98.69%** |
-
-Training uses cross-validation on the training split, while the test split is
-reserved for final evaluation. See
-[`FALL_MODEL_RESULTS.md`](Elderly%20Care/elderly_care_ai/FALL_MODEL_RESULTS.md)
-for the complete methodology and confusion-matrix results.
-
-## Project structure
+## Repository structure
 
 ```text
 Final Project Elderly Care/
-├── README.md
-├── Smart_Elderly_Completed_Final.pdf
-└── Elderly Care/
-    └── elderly_care_ai/
-        ├── data/                       # Local datasets (ignored by Git)
-        ├── models/                     # Trained model artifacts
-        ├── music/                      # Emotion-based audio library
-        ├── outputs/                    # Predictions and evaluation evidence
-        ├── src/
-        │   ├── alert_engine.py         # Alert prioritization
-        │   ├── emotion_smoother.py     # Stable-emotion filtering
-        │   ├── fall_model.py           # Fall classifier interface
-        │   ├── firebase_client.py      # Realtime Database adapter
-        │   ├── health_anomaly.py       # Vital-sign risk rules
-        │   ├── mood_detector.py        # Background facial analysis
-        │   ├── mpu6050_features.py     # Motion feature extraction
-        │   ├── music_player.py         # Mood-aware playback
-        │   └── system_engine.py        # Central orchestration
-        ├── tests/                       # Automated unit tests
-        ├── run_mood_detection.py
-        ├── run_fall_detection.py
-        ├── run_mpu6050_fall_detection.py
-        ├── run_vitals_monitor.py
-        └── train_fall_model.py
+|-- README.md
+|-- elderly_care_ai/
+|   |-- src/                 # AI, alert, Firebase, and audio modules
+|   |-- tests/               # Python unit tests
+|   |-- data/                # Local training/input data
+|   |-- models/              # Generated model artifacts
+|   |-- outputs/             # Evaluation and prediction output
+|   |-- music/               # Audio grouped by emotion
+|   |-- run_*.py             # Runtime entry points
+|   `-- train_fall_model.py
+|-- Elder Care Mobile App/
+|   |-- screens/             # App screens
+|   |-- navigation/          # Stack and tab navigation
+|   |-- context/             # Shared live Firebase state
+|   |-- services/            # Firebase configuration
+|   |-- assets/              # App images and icons
+|   `-- App.js
+|-- Elder Care IOT/
+|   |-- sensor_test.ino      # Vitals, movement, and SOS device
+|   `-- Roombox_Monitor.ino.ino # Room environment monitor
+`-- Smart_Elderly_Completed_Final.pdf
 ```
 
-## Quick start
+## Prerequisites
 
-### Prerequisites
-
-- Python 3.10 or newer
-- A webcam for mood detection
 - Git
-- Optional: Firebase project and service-account credentials
-- Optional: Arduino with MPU6050 or a compatible serial sensor stream
+- Python 3.10 or newer
+- Node.js and npm
+- Expo Go or an Android/iOS emulator
+- Arduino IDE with ESP32 board support
+- A Firebase project with Realtime Database enabled
+- A webcam for local mood detection
+- Supported IoT hardware as required by each sketch
 
-### 1. Clone and enter the application
+## 1. Elder Care AI
+
+### Capabilities
+
+The Python module provides camera-based mood detection, fall classification,
+MPU6050 feature extraction, vital-sign risk rules, alert generation, Firebase
+integration, and mood-aware music. The recorded fall-model evaluation reports
+96.91% test accuracy and 98.69% fall recall. See
+[FALL_MODEL_RESULTS.md](elderly_care_ai/FALL_MODEL_RESULTS.md) for details.
+
+### Setup
 
 ```powershell
-git clone https://github.com/amayarathnayake2001-wq/Elderly-Care.git
-cd "Elderly-Care\Elderly Care\elderly_care_ai"
-```
-
-### 2. Create a virtual environment
-
-```powershell
+cd elderly_care_ai
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 py -m pip install --upgrade pip
 pip install -r requirements.txt
-```
-
-### 3. Configure the application
-
-```powershell
 Copy-Item .env.example .env
 ```
 
-Local mood detection works without Firebase. To enable cloud integration, add
-the Firebase credential path and database URL to `.env`.
+Set `FIREBASE_CREDENTIALS_PATH`, `FIREBASE_DATABASE_URL`, and `ELDERLY_ID` in
+`.env` when Firebase integration is required. Mood detection can also run in
+local-only mode with the Firebase values left blank.
 
-### 4. Run mood detection
+### Run the AI services
 
 ```powershell
+# Camera-based mood detection
 py run_mood_detection.py
+
+# Monitor Firebase movement windows
+py run_fall_detection.py
+
+# Monitor heart rate and SpO2
+py run_vitals_monitor.py
 ```
 
-Press `q` in the camera window to stop the application.
+Press `q` to close the mood-detection camera window. Add `--once` to either
+Firebase monitor to perform a single polling cycle.
 
-## Configuration
+For raw MPU6050 CSV data (`ax, ay, az, gx, gy, gz`):
 
-| Variable | Default | Purpose |
-|---|---:|---|
-| `CAMERA_INDEX` | `0` | OpenCV camera device index |
-| `CAMERA_WIDTH` | `640` | Capture width in pixels |
-| `CAMERA_HEIGHT` | `480` | Capture height in pixels |
-| `MIN_EMOTION_CONFIDENCE` | `40` | Minimum accepted emotion confidence |
-| `EMOTION_STABILITY_SECONDS` | `4` | Required stable duration before publishing |
-| `EMOTION_WINDOW_SIZE` | `15` | Number of recent emotion readings retained |
-| `ANALYZE_EVERY_N_FRAMES` | `5` | Camera inference interval |
-| `FIREBASE_CREDENTIALS_PATH` | empty | Service-account JSON path |
-| `FIREBASE_DATABASE_URL` | empty | Firebase Realtime Database URL |
-| `ELDERLY_ID` | `elderly_001` | Monitored person identifier |
+```powershell
+py run_mpu6050_fall_detection.py --csv data\mpu6050_raw.csv `
+  --window-size 100 --step 50 --acc-unit g
+```
 
-## Usage
+For a live serial stream:
 
-### Train the fall model
+```powershell
+py run_mpu6050_fall_detection.py --port COM3 --baud-rate 115200 `
+  --window-size 100 --step 50 --acc-unit g
+```
 
-Place the labelled `Train.csv` and `Test.csv` files in `data/`, then run:
+### Train and test
 
 ```powershell
 py train_fall_model.py `
@@ -172,120 +162,142 @@ py train_fall_model.py `
   --test-data data\Test.csv `
   --label-column fall `
   --tune
+
+py -m pytest -q
 ```
 
-Generated model and evaluation files are written to `models/` and `outputs/`.
-These directories intentionally keep generated artifacts out of Git.
+Generated models and reports are written to `models/` and `outputs/`.
 
-### Predict a feature CSV
+## 2. Elder Care Mobile App
+
+### Capabilities
+
+The Expo application subscribes to `elderly/elderly_001` in Firebase and gives
+caregivers access to:
+
+- A live safety dashboard
+- Heart rate, SpO2, temperature, humidity, and activity details
+- AI mood results and confidence
+- Emergency alerts with critical audio cues
+- Alert acknowledgement and resolution details
+- Patient reports, caregiver details, and elderly-person details
+- Notification, emergency-call, privacy, and support settings
+
+### Setup and run
 
 ```powershell
-py predict_fall_csv.py --input data\FEATURE_ROWS.csv
+cd "Elder Care Mobile App"
+npm install
+npm start
 ```
 
-### Process raw MPU6050 recordings
-
-The input columns must be `ax, ay, az, gx, gy, gz`.
+From the Expo terminal, scan the QR code with Expo Go or launch a platform
+directly:
 
 ```powershell
-py run_mpu6050_fall_detection.py `
-  --csv data\mpu6050_raw.csv `
-  --window-size 100 `
-  --step 50 `
-  --acc-unit g
+npm run android
+npm run ios
+npm run web
 ```
 
-For live Arduino serial data:
+Before running the app against another backend, update
+`Elder Care Mobile App/services/firebaseConfig.js` with that Firebase web-app
+configuration. The current login and sign-up screens are prototype UI flows;
+Firebase Authentication is not yet implemented.
 
-```powershell
-py run_mpu6050_fall_detection.py `
-  --port COM3 `
-  --baud-rate 115200 `
-  --window-size 100 `
-  --step 50 `
-  --acc-unit g
-```
+## 3. Elder Care IoT
 
-### Monitor Firebase
+The IoT folder contains two Arduino sketches.
 
-```powershell
-# Fall events
-py run_fall_detection.py
+### Health, movement, and SOS device
 
-# Heart rate and SpO2
-py run_vitals_monitor.py
-```
+`sensor_test.ino` targets an ESP32-C3 Super Mini and reads:
 
-For a single polling cycle, add `--once`. The polling interval can be changed
-with `--poll-seconds`.
+| Hardware | Data |
+|---|---|
+| MAX30102 | Heart rate, SpO2, IR/red readings, and sensor temperature |
+| MPU6050 | Three-axis acceleration and gyroscope readings |
+| Push button | SOS state |
 
-### Run the simulators
+The sketch uses GPIO 8/9 for the shared I2C bus and GPIO 3 for the SOS button.
+It uploads the latest reading once per second to `/sensor_data/latest`.
 
-```powershell
-py simulate_sensor_data.py
-py simulate_fall_monitor.py
-py simulate_health_monitor.py
-```
+Required Arduino libraries include `FirebaseClient`, `Adafruit MPU6050`,
+`Adafruit Unified Sensor`, and the SparkFun MAX3010x sensor library.
 
-## Firebase data contract
+### Room-box monitor
 
-The AI module publishes to the following paths:
+`Roombox_Monitor.ino.ino` targets an ESP32 and reads:
+
+| Hardware | Connection/data |
+|---|---|
+| DHT11 | GPIO 4; room temperature and humidity |
+| PIR sensor | GPIO 18; room movement |
+| INMP441 microphone | WS 15, SCK 14, SD 32; sound level |
+
+It uploads `Temperature`, `Humidity`, `Motion`, and `SoundLevel` once per
+second to `/Roombox`.
+
+### Upload a sketch
+
+1. Install ESP32 board support and the required sensor/Firebase libraries in
+   Arduino IDE.
+2. Open the required `.ino` sketch.
+3. Replace the example Wi-Fi and Firebase settings with your own configuration.
+4. Select the correct ESP32 board and serial port.
+5. Upload the sketch and open Serial Monitor at `115200` baud.
+
+## Firebase integration
+
+The three components exchange data through Firebase Realtime Database. The AI
+module uses the following primary paths:
 
 ```text
 elderly/{elderly_id}/ai/mood
 elderly/{elderly_id}/ai/fall
+elderly/{elderly_id}/ai/health
 elderly/{elderly_id}/alerts/{alert_id}
 elderly/{elderly_id}/history/mood/{record_id}
+elderly/{elderly_id}/sensors/movement/latest
+elderly/{elderly_id}/sensors/movement/windows
 ```
 
-Hardware-generated movement windows must provide a `features` object containing:
+The current IoT sketches also publish their raw readings to:
+
+```text
+/sensor_data/latest
+/Roombox
+```
+
+When integrating the hardware directly with the AI and app, map raw readings
+into the shared `elderly/{elderly_id}/sensors/...` structure. Fall-detection
+windows must contain these model-compatible features:
 
 ```text
 acc_max, gyro_max, acc_kurtosis, gyro_kurtosis, lin_max,
 acc_skewness, gyro_skewness, post_gyro_max, post_lin_max
 ```
 
-Publish the window under:
-
-```text
-elderly/{elderly_id}/sensors/movement/windows
-elderly/{elderly_id}/sensors/movement/latest
-```
-
-Feature units, window duration, and sampling frequency must match the data used
-to train the model.
-
-## Testing
-
-Run the automated test suite from `Elderly Care/elderly_care_ai`:
-
-```powershell
-pip install pytest
-py -m pytest -q
-```
-
-Tests cover alert behavior, emotion smoothing, health anomalies, MPU6050 feature
-extraction, system orchestration, and vital-monitor input handling.
+The sampling rate, units, window duration, and feature names must match the
+data used to train the fall model.
 
 ## Security and privacy
 
-- Never commit `.env`, Firebase service-account files, Wi-Fi credentials, raw
-  health datasets, trained models, or generated patient records.
-- Restrict Firebase Realtime Database access with authenticated security rules.
-- Obtain informed consent before capturing faces or collecting health data.
-- Minimize retained personal data and define an appropriate deletion policy.
-- Keep human review and an independent emergency-contact process in the loop.
+- Do not commit Wi-Fi passwords, Firebase secrets, service-account JSON files,
+  `.env` files, patient records, or raw health datasets.
+- Move device credentials into a local ignored configuration before deployment
+  and rotate any credentials that have already been exposed.
+- Require authenticated access in Firebase Realtime Database rules.
+- Obtain informed consent before collecting face or health information.
+- Keep a human caregiver and an independent emergency-contact process in the
+  loop; never rely on this prototype as the only safety mechanism.
 
 ## Technology stack
 
-`Python` · `OpenCV` · `DeepFace` · `TensorFlow` · `RetinaFace` ·
-`scikit-learn` · `pandas` · `NumPy` · `Firebase Admin SDK` · `pygame` ·
-`pyserial` · `pytest`
+`Python` · `OpenCV` · `DeepFace` · `TensorFlow` · `scikit-learn` · `Firebase`
+· `React Native` · `Expo` · `Arduino` · `ESP32` · `MAX30102` · `MPU6050`
 
----
+## License
 
-<div align="center">
-
-Built as an academic AI & IoT project for safer, more responsive elderly care.
-
-</div>
+No license file is currently included. Add a license before redistributing or
+reusing the project outside its academic context.
